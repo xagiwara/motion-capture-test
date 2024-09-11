@@ -1,16 +1,18 @@
 <template>
-  <canvas ref="canvasRef" />
-  <div class="menu">
-    <p>設定→外部サービスとの接続設定</p>
-    <p>送信フォーマット: mocopi(UDP)</p>
-    <p>IPアドレス: 確認して設定</p>
-    <p>
-      送信ポート設定: <input v-model="mocopiPort" :disabled="!!connection" />
-    </p>
-    <p>
-      <button @click="connect" v-if="!connection">Listen</button>
-      <button @click="disconnect" v-else>Disonnect</button>
-    </p>
+  <div style="display: contents">
+    <canvas ref="canvasRef" />
+    <div class="menu">
+      <p>設定→外部サービスとの接続設定</p>
+      <p>送信フォーマット: mocopi(UDP)</p>
+      <p>IPアドレス: 確認して設定</p>
+      <p>
+        送信ポート設定: <input v-model="mocopiPort" :disabled="!!connection">
+      </p>
+      <p>
+        <button v-if="!connection" @click="connect">Listen</button>
+        <button v-else @click="disconnect">Disonnect</button>
+      </p>
+    </div>
   </div>
 </template>
 
@@ -18,10 +20,12 @@
 import { onMounted, ref, shallowRef } from 'vue';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { VRMLoaderPlugin, VRMUtils, VRM } from '@pixiv/three-vrm';
+import { VRMLoaderPlugin, VRMUtils, type VRM } from '@pixiv/three-vrm';
 import { quat, Vec3 } from 'gl-matrix';
 
-const mocopiPort = ref(Number((import.meta.env.VITE_MOCOPI_PORT || '12351').split('-')[0]));
+const runtimeConfig = useRuntimeConfig();
+
+const mocopiPort = ref(Number(`${runtimeConfig.public.mocopiDefaultPort}`.split('-')[0]));
 
 const canvasRef = ref<HTMLCanvasElement>();
 
@@ -33,29 +37,26 @@ const connect = () => {
     return;
   }
 
-  const ws = new WebSocket(`ws://localhost:${import.meta.env.VITE_WEBAPI_PORT}/?port=${mocopiPort.value}`);
+  const ws = new WebSocket(`ws://${location.host}/listen/mocopi?port=${mocopiPort.value}`);
   connection.value = ws;
-  (window as any).$ws = ws;
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.pose) {
       poseDataRaw.value = data.pose;
     }
   };
-}
+};
 
 const disconnect = () => {
   connection.value?.close();
   connection.value = undefined;
-}
+};
 
 onMounted(async () => {
-  (window as any).$ws?.close();
-
   const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.value });
   const camera = new THREE.PerspectiveCamera(30.0, window.innerWidth / window.innerHeight, 0.1, 20.0);
   camera.position.set(0.0, 1.0, -5.0);
-  camera.lookAt(0.0, 1.0, 0.0)
+  camera.lookAt(0.0, 1.0, 0.0);
   const scene = new THREE.Scene();
   const light = new THREE.DirectionalLight(0xffffff, Math.PI);
   light.position.set(1.0, 1.0, 1.0).normalize();
@@ -80,7 +81,7 @@ onMounted(async () => {
       (error) => {
         console.error(error);
         reject(error);
-      }
+      },
     );
   });
 
