@@ -15,6 +15,10 @@ export default withNuxt(
       semi: ['error', 'always'],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'vue/first-attribute-linebreak': ['warn', {
+        'multiline': 'beside',
+        'singleline': 'beside',
+      }],
     },
   },
 );

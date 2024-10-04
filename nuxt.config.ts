@@ -9,9 +9,15 @@ export default defineNuxtConfig({
       websocket: true,
     },
   },
+  eslint: {
+    config: {
+      stylistic: true,
+    },
+  },
   runtimeConfig: {
     public: {
       mocopiDefaultPort: process.env.MOCOPI_DEFAULT_PORT || '12351',
+      vmcDefaultPort: process.env.VMC_DEFAULT_PORT || '39539',
     },
   },
 });
